@@ -103,7 +103,7 @@ const getView = async file => {
     }
     if (!book) throw new Error('File type not supported')
     const view = document.createElement('foliate-view')
-    document.body.append(view)
+    $('#ebook-reader').append(view)
     await view.open(book)
     return view
 }
@@ -200,6 +200,7 @@ class Reader {
 
         const { book } = this.view
         this.view.renderer.setStyles?.(getCSS(this.style))
+        this.view.renderer.setAttribute('max-column-count', '1')
         this.view.renderer.next()
 
         $('#header-bar').style.visibility = 'visible'
@@ -296,7 +297,7 @@ class Reader {
 }
 
 const open = async file => {
-    document.body.removeChild($('#drop-target'))
+    $('#drop-target').remove()
     const reader = new Reader()
     globalThis.reader = reader
     await reader.open(file)
