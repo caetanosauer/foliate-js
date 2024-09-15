@@ -225,6 +225,62 @@ class View {
                 // until the bug is fixed we can at least account for font load
                 doc.fonts.ready.then(() => this.expand())
 
+                const iframeDocument = this.#iframe.contentDocument || this.#iframe.contentWindow.document;
+              
+                // Capture text selection in the iframe
+                iframeDocument.addEventListener('mouseup', () => {
+                  const selection = iframeDocument.getSelection();
+                  if (selection && selection.toString().trim()) {
+                    globalThis.selectedText = selection.toString().trim();
+                    console.log('selectedText:', globalThis.selectedText);
+                  }
+                });
+              
+                // // Create a custom right-click context menu
+                // iframeDocument.addEventListener('contextmenu', (e) => {
+                //   e.preventDefault();
+                //   if (selectedText) {
+                //     showCustomContextMenu(e.pageX, e.pageY);
+                //   }
+                // });
+              
+                // function showCustomContextMenu(x, y) {
+                //   const menu = document.createElement('div');
+                //   menu.className = 'custom-context-menu';
+                //   menu.innerHTML = '<div class="menu-item">Ask question about this...</div>';
+                //   menu.style.position = 'fixed'; // Changed from 'absolute' to 'fixed'
+                //   menu.style.left = x + 'px';
+                //   menu.style.top = y + 'px';
+                //   menu.style.backgroundColor = 'green';
+                //   menu.style.border = '1px solid #ccc';
+                //   menu.style.padding = '5px';
+                //   menu.style.display = 'block';
+                //   menu.style.cursor = 'pointer';
+                //   menu.style.zIndex = '1000'; // Ensure it appears above the iframe
+                //   document.body.appendChild(menu);
+              
+                //   // Hide menu when clicking outside
+                //   document.addEventListener('click', () => menu.remove(), { once: true });
+              
+                //   // Implement the "Ask question about this..." option
+                //   const menuItem = menu.querySelector('.menu-item');
+                //   menuItem.addEventListener('click', () => {
+                //     // askQuestionAboutSelection(selectedText);
+                //     // menu.remove();
+                //   });
+                // }
+              
+                // function askQuestionAboutSelection(text) {
+                //   // This function should integrate with your existing chat interface
+                //   const chatInput = document.querySelector('#your-chat-input-selector');
+                //   chatInput.value = `Can you explain this passage: "${text}"`;
+                //   chatInput.focus();
+              
+                //   // If you want to automatically send the question:
+                //   // const sendButton = document.querySelector('#your-send-button-selector');
+                //   // sendButton.click();
+                // }
+
                 resolve()
             }, { once: true })
             this.#iframe.src = src
