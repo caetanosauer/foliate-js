@@ -297,34 +297,43 @@ class Reader {
 }
 
 const open = async file => {
-    $('#drop-target').remove()
+    const dropTarget = $('#drop-target')
+    if (dropTarget) {
+        dropTarget.remove();
+    }
+    const bookGrid = $('#book-grid')
+    console.log("bookGrid", bookGrid)
+    if (bookGrid) {
+        bookGrid.remove()
+    }
     const reader = new Reader()
     globalThis.reader = reader
     await reader.open(file)
 }
 
-const dragOverHandler = e => e.preventDefault()
-const dropHandler = e => {
-    e.preventDefault()
-    const item = Array.from(e.dataTransfer.items)
-        .find(item => item.kind === 'file')
-    if (item) {
-        const entry = item.webkitGetAsEntry()
-        open(entry.isFile ? item.getAsFile() : entry).catch(e => console.error(e))
-    }
-}
+// Make open function globally accessible
+globalThis.openEbookInReader = open;
+
+// TODO: this can be removed if we indeed never allow uploading ebooks, or we can retain the ability to open local files without any AI features
 const dropTarget = $('#drop-target')
-dropTarget.addEventListener('drop', dropHandler)
-dropTarget.addEventListener('dragover', dragOverHandler)
+if (dropTarget) {
+    const dragOverHandler = e => e.preventDefault()
+    const dropHandler = e => {
+        e.preventDefault()
+        const item = Array.from(e.dataTransfer.items)
+            .find(item => item.kind === 'file')
+        if (item) {
+            const entry = item.webkitGetAsEntry()
+            open(entry.isFile ? item.getAsFile() : entry).catch(e => console.error(e))
+        }
+    }
+    dropTarget.addEventListener('drop', dropHandler)
+    dropTarget.addEventListener('dragover', dragOverHandler)
 
-$('#file-input').addEventListener('change', e =>
-    open(e.target.files[0]).catch(e => console.error(e)))
-$('#file-button').addEventListener('click', () => $('#file-input').click())
+    $('#file-input').addEventListener('change', e =>
+        open(e.target.files[0]).catch(e => console.error(e)))
+    $('#file-button').addEventListener('click', () => $('#file-input').click())
 
-const params = new URLSearchParams(location.search)
-const url = params.get('url')
-if (url) fetch(url)
-    .then(res => res.blob())
-    .then(blob => open(new File([blob], new URL(url, window.location.origin).pathname)))
-    .catch(e => console.error(e))
-else dropTarget.style.visibility = 'visible'
+    dropTarget.style.visibility = 'visible'
+}
+
