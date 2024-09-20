@@ -232,8 +232,24 @@ class View {
                   const selection = iframeDocument.getSelection();
                   if (selection && selection.toString().trim()) {
                     globalThis.selectedText = selection.toString().trim();
-                    console.log('selectedText:', globalThis.selectedText);
+                    // Set the text of the textarea with id "debug-selected-text"
+                    // TODO this is VERY ugly because we are changing the document outside of the iframe
+                    const debugTextarea = document.getElementById('debug-selected-text');
+                    if (debugTextarea) {
+                        debugTextarea.value = globalThis.selectedText;
+                    }
                   }
+                });
+
+                // Finds every images with the class "se:image.color-depth.black-on-transparent" and inverts their colors
+                // TODO: this is a hack because the colors are inverted inside the epub CSS files themselves, which is guided by the color scheme of the device, that we don't support for now
+                const images = iframeDocument.querySelectorAll('img[*|type*="se:image.color-depth.black-on-transparent"]');
+                images.forEach(img => {
+                    // Remove the type attribute, regardless of its namespace
+                    const typeAttr = Array.from(img.attributes).find(attr => attr.localName === 'type');
+                    if (typeAttr) {
+                        img.removeAttributeNode(typeAttr);
+                    }
                 });
               
                 // // Create a custom right-click context menu
@@ -447,7 +463,7 @@ export class Paginator extends HTMLElement {
     #locked = false // while true, prevent any further navigation
     #styles
     #styleMap = new WeakMap()
-    #mediaQuery = matchMedia('(prefers-color-scheme: dark)')
+    #mediaQuery = matchMedia('(prefers-color-scheme: light)')  // TODO: this was hard coded to dark
     #mediaQueryListener
     #scrollBounds
     #touchState
