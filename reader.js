@@ -304,9 +304,12 @@ const open = async file => {
         dropTarget.remove();
     }
     const bookGrid = $('#book-grid')
-    console.log("bookGrid", bookGrid)
     if (bookGrid) {
         bookGrid.remove()
+    }
+    const welcomeMsg = $('#welcome-msg')
+    if (welcomeMsg) {
+        welcomeMsg.remove()
     }
     const reader = new Reader()
     globalThis.reader = reader
