@@ -226,19 +226,21 @@ class View {
                 doc.fonts.ready.then(() => this.expand())
 
                 const iframeDocument = this.#iframe.contentDocument || this.#iframe.contentWindow.document;
-              
-                // Capture text selection in the iframe
+
+                // Add selection event listener
                 iframeDocument.addEventListener('mouseup', () => {
-                  const selection = iframeDocument.getSelection();
-                  if (selection && selection.toString().trim()) {
-                    globalThis.selectedText = selection.toString().trim();
-                    // Set the text of the textarea with id "debug-selected-text"
-                    // TODO this is VERY ugly because we are changing the document outside of the iframe
-                    const debugTextarea = document.getElementById('debug-selected-text');
-                    if (debugTextarea) {
-                        debugTextarea.value = globalThis.selectedText;
+                    const selection = iframeDocument.getSelection();
+                    if (selection && selection.toString().trim()) {
+                        // Dispatch custom event with selection details
+                        this.container.dispatchEvent(new CustomEvent('text-selected', {
+                            detail: {
+                                iframeDocument: iframeDocument
+                            },
+                            bubbles: true,
+                            composed: true
+                        }));
+                        selection.removeAllRanges();
                     }
-                  }
                 });
 
                 // Finds every images with the class "se:image.color-depth.black-on-transparent" and inverts their colors
