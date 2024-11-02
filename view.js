@@ -99,12 +99,6 @@ export class View extends HTMLElement {
                 debugTextarea.value = text;
             }
 
-            // Update CFI if needed
-            const cfiInput = document.getElementById('cfi-input');
-            if (cfiInput) {
-                cfiInput.value = cfi;
-            }
-
             // Add yellow highlight to selected text
             const obj = this.#getOverlayer(this.lastLocation.index);
             if (!obj) return;
