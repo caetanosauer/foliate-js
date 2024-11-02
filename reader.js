@@ -166,11 +166,16 @@ class Reader {
     closeSideBar() {
         $('#dimming-overlay').classList.remove('show')
         $('#side-bar').classList.remove('show')
+        $('#chat-side-bar').classList.remove('show')
     }
     constructor() {
         $('#side-bar-button').addEventListener('click', () => {
             $('#dimming-overlay').classList.add('show')
             $('#side-bar').classList.add('show')
+        })
+        $('#chat-side-bar-button').addEventListener('click', () => {
+            $('#dimming-overlay').classList.add('show')
+            $('#chat-side-bar').classList.add('show')
         })
         $('#dimming-overlay').addEventListener('click', () => this.closeSideBar())
 
@@ -202,7 +207,6 @@ class Reader {
 
         const { book } = this.view
         this.view.renderer.setStyles?.(getCSS(this.style))
-        this.view.renderer.setAttribute('max-column-count', '1')
         this.view.renderer.next()
 
         $('#header-bar').style.visibility = 'visible'
