@@ -302,7 +302,8 @@ class Reader {
     }
 }
 
-const open = async file => {
+export async function openEbook(file) {
+    // Remove elements that are not needed for the reader
     const dropTarget = $('#drop-target')
     if (dropTarget) {
         dropTarget.remove();
@@ -315,15 +316,12 @@ const open = async file => {
     if (welcomeMsg) {
         welcomeMsg.remove()
     }
+    // Initialize the reader and load the file
     const reader = new Reader()
     globalThis.reader = reader
     await reader.open(file)
 }
 
-// Make open function globally accessible
-globalThis.openEbookInReader = open;
-
-// TODO: this can be removed if we indeed never allow uploading ebooks, or we can retain the ability to open local files without any AI features
 const dropTarget = $('#drop-target')
 if (dropTarget) {
     const dragOverHandler = e => e.preventDefault()

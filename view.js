@@ -126,6 +126,8 @@ export class View extends HTMLElement {
                             color: 'rgba(245, 221, 66, 0.85)'
                         });
                         break;
+                    case 'ask-question':
+                        break
                 }
             });
 
