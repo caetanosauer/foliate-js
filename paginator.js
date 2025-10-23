@@ -277,6 +277,35 @@ class View {
                 // until the bug is fixed we can at least account for font load
                 doc.fonts.ready.then(() => this.expand())
 
+                const iframeDocument = this.#iframe.contentDocument || this.#iframe.contentWindow.document;
+
+                // Add selection event listener
+                iframeDocument.addEventListener('mouseup', () => {
+                    const selection = iframeDocument.getSelection();
+                    if (selection && selection.toString().trim()) {
+                        // Dispatch custom event with selection details
+                        this.container.dispatchEvent(new CustomEvent('text-selected', {
+                            detail: {
+                                iframeDocument: iframeDocument
+                            },
+                            bubbles: true,
+                            composed: true
+                        }));
+                        selection.removeAllRanges();
+                    }
+                });
+
+                // Finds every images with the class "se:image.color-depth.black-on-transparent" and inverts their colors
+                // TODO: this is a hack because the colors are inverted inside the epub CSS files themselves, which is guided by the color scheme of the device, that we don't support for now
+                const images = iframeDocument.querySelectorAll('img[*|type*="se:image.color-depth.black-on-transparent"]');
+                images.forEach(img => {
+                    // Remove the type attribute, regardless of its namespace
+                    const typeAttr = Array.from(img.attributes).find(attr => attr.localName === 'type');
+                    if (typeAttr) {
+                        img.removeAttributeNode(typeAttr);
+                    }
+                });
+
                 resolve()
             }, { once: true })
             this.#iframe.src = src
@@ -443,7 +472,7 @@ export class Paginator extends HTMLElement {
     #locked = false // while true, prevent any further navigation
     #styles
     #styleMap = new WeakMap()
-    #mediaQuery = matchMedia('(prefers-color-scheme: dark)')
+    #mediaQuery = matchMedia('(prefers-color-scheme: light)')  // TODO: this was hard coded to dark
     #mediaQueryListener
     #scrollBounds
     #touchState

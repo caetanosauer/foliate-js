@@ -223,10 +223,78 @@ export class View extends HTMLElement {
     history = new History()
     constructor() {
         super()
+        this.#createContextMenu()
         this.history.addEventListener('popstate', ({ detail }) => {
             const resolved = this.resolveNavigation(detail.state)
             this.renderer.goTo(resolved)
         })
+
+        // Add text selection handler
+        this.addEventListener('text-selected', (e) => {
+            const { iframeDocument } = e.detail;
+            const selection = iframeDocument.getSelection();
+            const range = selection.getRangeAt(0);
+            const text = range.toString().trim();
+            if (!text) return null;
+            
+            // Get the CFI for the selected range
+            const cfi = this.getCFI(this.lastLocation.index, range);
+            
+            // Update global selected text
+            // TODO not sure we still need the globalThis thing
+            globalThis.selectedText = text;
+            
+            // Update debug textarea if it exists
+            const debugTextarea = document.getElementById('debug-selected-text');
+            if (debugTextarea) {
+                debugTextarea.value = text;
+            }
+
+            // Add yellow highlight to selected text
+            const obj = this.#getOverlayer(this.lastLocation.index);
+            if (!obj) return;
+
+            const { overlayer } = obj;
+            overlayer.remove('temp-highlight');
+            overlayer.add('temp-highlight', range, Overlayer.highlight, {
+                    color: 'rgba(128, 128, 128, 0.75)'
+                });
+            
+            const contextMenu = this.#root.getElementById('foliate-context-menu');
+            if (contextMenu) {
+                contextMenu.style.left = `${e.detail.mouseX}px`;
+                contextMenu.style.top = `${e.detail.mouseY}px`;
+                contextMenu.style.display = 'block';
+            }
+
+            // Listen for actions on the context menu
+            this.addEventListener('context-menu-action', (e) => {
+                const { action } = e.detail;
+                switch(action) {
+                    case 'highlight':
+                        overlayer.remove('temp-highlight');
+                        overlayer.add('permanent-highlight', range, Overlayer.highlight, {
+                            color: 'rgba(245, 221, 66, 0.85)'
+                        });
+                        break;
+                    case 'ask-question':
+                        break
+                }
+            });
+
+            const closeMenuAndHighlight = (e) => {
+                console.log('closeMenuAndHighlight', e.target);
+                if (contextMenu && !contextMenu.contains(e.target)) {
+                    contextMenu.style.display = 'none';
+                    overlayer.remove('temp-highlight');
+                    iframeDocument.removeEventListener('click', closeMenuAndHighlight);
+                }
+            };
+            // Silly javascript hack: add a little delay to avoid the click being captured immediately
+            setTimeout(() => {
+                iframeDocument.addEventListener('click', closeMenuAndHighlight);
+            }, 0);
+        });
     }
     async open(book) {
         if (typeof book === 'string'
@@ -329,7 +397,7 @@ export class View extends HTMLElement {
         const tocItem = this.#tocProgress?.getProgress(index, range)
         const pageItem = this.#pageProgress?.getProgress(index, range)
         const cfi = this.getCFI(index, range)
-        this.lastLocation = { ...progress, tocItem, pageItem, cfi, range }
+        this.lastLocation = { ...progress, tocItem, pageItem, cfi, range, index }
         if (reason === 'snap' || reason === 'page' || reason === 'scroll')
             this.history.replaceState(cfi)
         this.#emit('relocate', this.lastLocation)
@@ -587,6 +655,54 @@ export class View extends HTMLElement {
     startMediaOverlay() {
         const { index } = this.renderer.getContents()[0]
         return this.mediaOverlay.start(index)
+    }
+    #createContextMenu() {
+        const menu = document.createElement('div');
+        menu.id = 'foliate-context-menu';
+        menu.innerHTML = `
+            <button class="menu-item" data-action="highlight">Highlight</button>
+            <button class="menu-item" data-action="ask-question">Ask question</button>
+        `;
+        
+        // Style the menu
+        const style = document.createElement('style');
+        style.textContent = `
+            #foliate-context-menu {
+                position: fixed;
+                background: white;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                padding: 4px 0;
+                display: none;
+                z-index: 1000;
+            }
+            
+            .menu-item {
+                display: block;
+                padding: 8px 12px;
+                width: 100%;
+                border: none;
+                background: none;
+                text-align: left;
+                cursor: pointer;
+            }
+            
+            .menu-item:hover {
+                background-color: #f0f0f0;
+            }
+        `;
+        
+        // Add event listeners for menu items
+        menu.addEventListener('click', (e) => {
+            const action = e.target.dataset.action;
+            if (!action) return;
+            
+            menu.style.display = 'none';
+            this.#emit('context-menu-action', { action });
+        });
+        
+        this.#root.append(style, menu);
     }
 }
 

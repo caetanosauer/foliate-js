@@ -5,9 +5,11 @@ import { Overlayer } from './overlayer.js'
 
 const getCSS = ({ spacing, justify, hyphenate }) => `
     @namespace epub "http://www.idpf.org/2007/ops";
+    /*
     html {
         color-scheme: light dark;
     }
+    */ // TODO: disabled color schemes
     /* https://github.com/whatwg/html/issues/5426 */
     @media (prefers-color-scheme: dark) {
         a:link {
@@ -74,11 +76,16 @@ class Reader {
     closeSideBar() {
         $('#dimming-overlay').classList.remove('show')
         $('#side-bar').classList.remove('show')
+        $('#chat-side-bar').classList.remove('show')
     }
     constructor() {
         $('#side-bar-button').addEventListener('click', () => {
             $('#dimming-overlay').classList.add('show')
             $('#side-bar').classList.add('show')
+        })
+        $('#chat-side-bar-button').addEventListener('click', () => {
+            $('#dimming-overlay').classList.add('show')
+            $('#chat-side-bar').classList.add('show')
         })
         $('#dimming-overlay').addEventListener('click', () => this.closeSideBar())
 
@@ -208,32 +215,51 @@ class Reader {
     }
 }
 
-const open = async file => {
-    document.body.removeChild($('#drop-target'))
+export async function openEbook(file) {
+    // Remove elements that are not needed for the reader
+    const dropTarget = $('#drop-target')
+    if (dropTarget) {
+        dropTarget.remove();
+    }
+    const bookGrid = $('#book-grid')
+    if (bookGrid) {
+        bookGrid.remove()
+    }
+    const welcomeMsg = $('#welcome-msg')
+    if (welcomeMsg) {
+        welcomeMsg.remove()
+    }
+    // Initialize the reader and load the file
     const reader = new Reader()
     globalThis.reader = reader
     await reader.open(file)
 }
 
-const dragOverHandler = e => e.preventDefault()
-const dropHandler = e => {
-    e.preventDefault()
-    const item = Array.from(e.dataTransfer.items)
-        .find(item => item.kind === 'file')
-    if (item) {
-        const entry = item.webkitGetAsEntry()
-        open(entry.isFile ? item.getAsFile() : entry).catch(e => console.error(e))
-    }
-}
 const dropTarget = $('#drop-target')
-dropTarget.addEventListener('drop', dropHandler)
-dropTarget.addEventListener('dragover', dragOverHandler)
+if (dropTarget) {
+    const dragOverHandler = e => e.preventDefault()
+    const dropHandler = e => {
+        e.preventDefault()
+        const item = Array.from(e.dataTransfer.items)
+            .find(item => item.kind === 'file')
+        if (item) {
+            const entry = item.webkitGetAsEntry()
+            open(entry.isFile ? item.getAsFile() : entry).catch(e => console.error(e))
+        }
+    }
+    dropTarget.addEventListener('drop', dropHandler)
+    dropTarget.addEventListener('dragover', dragOverHandler)
 
-$('#file-input').addEventListener('change', e =>
-    open(e.target.files[0]).catch(e => console.error(e)))
-$('#file-button').addEventListener('click', () => $('#file-input').click())
+    $('#file-input').addEventListener('change', e =>
+        open(e.target.files[0]).catch(e => console.error(e)))
+    $('#file-button').addEventListener('click', () => $('#file-input').click())
 
+<<<<<<< HEAD
 const params = new URLSearchParams(location.search)
 const url = params.get('url')
 if (url) open(url).catch(e => console.error(e))
 else dropTarget.style.visibility = 'visible'
+=======
+    dropTarget.style.visibility = 'visible'
+}
+>>>>>>> 2391c3b (Custom LitRAG modifications for ebook reader)
