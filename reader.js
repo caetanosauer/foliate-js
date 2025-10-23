@@ -244,22 +244,18 @@ if (dropTarget) {
             .find(item => item.kind === 'file')
         if (item) {
             const entry = item.webkitGetAsEntry()
-            open(entry.isFile ? item.getAsFile() : entry).catch(e => console.error(e))
+            openEbook(entry.isFile ? item.getAsFile() : entry).catch(e => console.error(e))
         }
     }
     dropTarget.addEventListener('drop', dropHandler)
     dropTarget.addEventListener('dragover', dragOverHandler)
 
     $('#file-input').addEventListener('change', e =>
-        open(e.target.files[0]).catch(e => console.error(e)))
+        openEbook(e.target.files[0]).catch(e => console.error(e)))
     $('#file-button').addEventListener('click', () => $('#file-input').click())
 
-<<<<<<< HEAD
-const params = new URLSearchParams(location.search)
-const url = params.get('url')
-if (url) open(url).catch(e => console.error(e))
-else dropTarget.style.visibility = 'visible'
-=======
-    dropTarget.style.visibility = 'visible'
+    const params = new URLSearchParams(location.search)
+    const url = params.get('url')
+    if (url) openEbook(url).catch(e => console.error(e))
+    else dropTarget.style.visibility = 'visible'
 }
->>>>>>> 2391c3b (Custom LitRAG modifications for ebook reader)
